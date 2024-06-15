@@ -44,6 +44,7 @@ USER $USER
 ADD --chown=$USER:$USER fonts.tgz /home/$USER/.fonts
 ADD --chown=$USER:$USER i3 /home/$USER/.config/i3
 ADD --chown=$USER:$USER polybar /home/$USER/.config/polybar
+ADD --chown=$USER:$USER direnvrc /home/$USER/.config/direnv
 ADD --chown=$USER:$USER alacritty.toml /home/$USER/.config/alacritty/alacritty.toml
 WORKDIR /home/$USER
 # 設定zsh

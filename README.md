@@ -36,7 +36,7 @@
 
 4. 自動啟動 
 ```powershell
-cp AutoBoot.link C:\Users\{UserName}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+cp AutoBoot.vbs 'C:\Users\{UserName}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'
 ```
 
 ## oogrep
