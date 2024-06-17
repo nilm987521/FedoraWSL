@@ -1,5 +1,5 @@
 FROM fedora
-RUN dnf install -y dnf-plugins-core && tee -a /etc/yum.repos.d/google-cloud-sdk.repo <<EOF && dnf copr enable -y wslutilities/wslu && dnf copr enable -y errornointernet/jetbrains
+RUN dnf install -y dnf-plugins-core && tee -a /etc/yum.repos.d/google-cloud-sdk.repo <<EOF && dnf copr enable -y wslutilities/wslu && dnf copr enable -y errornointernet/jetbrains && sed -i '9d' /etc/dnf/dnf.conf
 [google-cloud-sdk]
 name=Google Cloud SDK
 baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el7-x86_64
