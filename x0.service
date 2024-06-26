@@ -1,0 +1,13 @@
+[Unit]
+Description=AutoLink X0 socket
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/bin/bash -c '[ -x /tmp/.X11-unix/X0 ] || ln -sf /mnt/wslg/.X11-unix/X0 /tmp/.X11-unix/'
+
+[Install]
+WantedBy=multi-user.target
+

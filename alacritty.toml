@@ -1,2 +1,5 @@
 [font]
 size = 16
+[shell]
+program = "/usr/bin/tmux"
+args = ["new-session", "-e", "SHELL=/usr/bin/zsh", "-e", "DISPLAY=:10", "-A", "-s", "linux"]

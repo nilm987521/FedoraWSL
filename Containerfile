@@ -1,4 +1,4 @@
-FROM fedora
+FROM fedora:40
 RUN dnf install -y dnf-plugins-core && tee -a /etc/yum.repos.d/google-cloud-sdk.repo <<EOF && dnf copr enable -y wslutilities/wslu && dnf copr enable -y errornointernet/jetbrains && sed -i '9d' /etc/dnf/dnf.conf
 [google-cloud-sdk]
 name=Google Cloud SDK
@@ -9,11 +9,16 @@ repo_gpgcheck=0
 gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
-RUN dnf install -y alacritty bat btop cmake dbus-x11 direnv eza feh fcitx5 fcitx5-chewing gcc git google-cloud-sdk i3 iproute iputils langpacks-zh_TW make man man-db neovim openssh-server podman polybar rcm rofi sudo systemd tealdeer tmux trash-cli unzip wget wslu xdg-utils xrdp zoxide zsh zip && dnf clean all -y
+RUN dnf install -y alacritty bat btop cmake dbus-x11 direnv eza feh fcitx5 fcitx5-chewing gcc git google-cloud-sdk i3 iproute iputils langpacks-zh_TW make man man-db neovim openssh-server podman polybar rcm rofi sudo systemd tealdeer tmux trash-cli unzip wget wslu xdg-utils xrdp zoxide zsh zip qutebrowser pass gpg && dnf clean all -y
 # 設定podman
 RUN setcap cap_setuid+ep /usr/bin/newuidmap && setcap cap_setgid+ep /usr/bin/newgidmap && systemctl unmask systemd-logind
+# 設定sshd
 RUN sed -i 's/\^#?Port.*/Port 2332/' /etc/ssh/sshd_config && systemctl enable sshd
+# 設定xrdp
 RUN sed -i 's/3389/3390/' /etc/xrdp/xrdp.ini && systemctl enable xrdp
+# 自動重連X0(wslg X11 socket)
+COPY --chmod=0400 x0.service /etc/systemd/system/x0.service
+RUN systemctl enable x0.service
 # 設定xrdp
 RUN sed -i '165s/^#//' /etc/xrdp/sesman.ini && sed -i '167d' /etc/xrdp/sesman.ini 
 RUN systemctl enable podman.socket
@@ -55,14 +60,18 @@ RUN sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools
     sed -i '39i _EZA_TAIL+=(" --icons=always")' ~/.oh-my-zsh/plugins/eza/eza.plugin.zsh
 # 設定profile
 RUN cat <<EOF | sudo tee -a /etc/profile
+# WSL似乎不會載入/etc/environment
 export PODMAN_IGNORE_CGROUPSV1_WARNING=1
 export GTK_IM_MODULE=fcitx
 export QT_IM_MODULE=fcitx
 export XMODIFIERS=@im=fcitx
-export DISPLAY=:10
+export SDL_IM_MODULE=fcitx
+export INPUT_METHOD=fcitx
+export GLFW_IM_MODULE=ibus
 export LANG=en_US.UTF-8
 export TZ=Asia/Taipei
-export BROWSER=wslview
+export BROWSER=xdg-open
+export PULSE_SERVER=/mnt/wslg/PulseServer
 # grep文件
 _oogrep() {
 	[[ \$# == 1 ]] && location="./" || location=\$2
@@ -72,6 +81,11 @@ oogrep() {
 	[[ \$# = 0 ]] && while true;do echo -e "================\ninput: ";read str; _oogrep \$str;done || \
 	_oogrep \$1 \$2
 }
+nvim() {
+        # Fedora 預設會帶 WAYLAND的變數，但實際上環境並沒有啟動 WAYLAND，反而導致nvim剪貼簿問題
+        unset WAYLAND_DISPLAY
+        /usr/bin/nvim "$@"
+}
 EOF
 # 設定alias
 RUN cat <<EOF | sudo tee -a /etc/profile.d/00-aliases.sh | sudo tee -a /etc/zshenv
@@ -79,7 +93,7 @@ alias vi=nvim
 alias vim=nvim
 alias rm=trash
 alias powershell="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
-alias start="powershell -c start"
+alias winStart="powershell -c start"
 alias ssh="/mnt/c/Windows/System32/OpenSSH/ssh.exe"
 alias ip="ip -c=always"
 EOF
@@ -92,7 +106,7 @@ RUN ~/.tmux/plugins/tpm/scripts/install_plugins.sh
 RUN mkdir -p /home/$USER/.local/bin
 RUN wget -c https://github.com/takumayokoo/oogrep/releases/download/v1.2/linux_386.tgz -O - | tar xz -C /home/$USER/.local/bin
 # 設定git
-RUN git config --global core.editor nvim && git config --global core.sshCommand /mnt/c/Windows/System32/OpenSSH/ssh.exe
+RUN git config --global core.editor nvim && git config --global init.defaultBranch main
 # 安裝sdkman & nvm
 RUN curl -sS "https://get.sdkman.io?rcupdate=false" | bash
 RUN curl -sS https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
@@ -113,4 +127,3 @@ vim.o.softtabstop = 4\n\
 vim.o.shiftwidth = 4" | tee -a ~/.config/nvim/lua/config/options.lua && \
     echo -e "return {\n    { \"nvimdev/dashboard-nvim\", enabled = false },\n}" | tee -a ~/.config/nvim/lua/plugins/disabled.lua
 RUN echo "env SHELL=/usr/bin/zsh tmux new-session -A -s main" | tee -a ~/.bashrc
-USER root
