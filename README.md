@@ -2,6 +2,7 @@
 基於`Fedora:40`的WSL環境，預設啟動Systemd。
 
 ## 預設的Package
+- alacritty
 - zsh
 - oh-my-zsh
 - tmux
@@ -21,7 +22,7 @@
 ## 安裝
 1. 使用Podman建立Image及Container
   ```bash
-  podman build -t fedora-wsl --build-arg USER="yourname" --build-arg PASSWD="passwd" --format docker --squash-all .
+  podman build -t fedora-wsl --build-arg-file account  --format docker --squash-all .
   podman create --name fedora-wsl fedora-wsl
   ```
 
