@@ -54,7 +54,7 @@ color1 4ca0be
 color2 00ffff
 
 TEXT
-${offset 56}${voffset 3}${cpugraph cpu6 17,1}${voffset -1}${cpugraph cpu1 0,50}
+${offset 56}${voffset 20}${cpugraph cpu6 17,1}${voffset -1}${cpugraph cpu1 0,50}
 ${voffset -30}${offset 110}${font Digital\-7:size=12}${time %H:%M:%S}${font}${alignr}
 ${voffset -5}${offset 110}${hr}${voffset 2}
 ${font Nimbus Mono L:size=9}${voffset -15}

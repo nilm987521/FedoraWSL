@@ -40,6 +40,8 @@
 cp AutoBoot.vbs 'C:\Users\{UserName}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'
 ```
 
+https://github.com/marchaesen/vcxsrv/releases
+
 ## oogrep
 oogrep跨系統執行，會有嚴重的效能問題，因此使用shell function，依據路徑決定使用哪個OS的版本，所以windows需自行安裝oogre(scoop)
 ``
@@ -57,3 +59,10 @@ podman system connection add wsl --identity C:\Users\<user>\.ssh\id_rsa --port 2
 ```shell
 sudo subscription-manager register
 ```
+## 中文輸入法
+部份Desktop啟動的App，會不吃環境變數須在Desktop檔案中調整`Exec`
+```
+Exec=env FOO=bar /usr/bin/my_prog
+```
+
+
