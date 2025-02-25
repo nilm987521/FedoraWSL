@@ -95,3 +95,7 @@ return {
     { "rcarriga/nvim-notify", enabled = false },
 }
 EOF
+
+# SSH AGENT
+COPY ssh-agent.servie /home/$USER/.config/systemd/user/
+RUN systemctl --user daemon-reload && systemctl --user enable ssh-agent.service
