@@ -5,8 +5,9 @@ After=network.target
 [Service]
 Type=simple
 Environment=SSH_AUTH_SOCK=%t/ssh-agent.socket
+ExecStartPre=/usr/bin/bash -c '[[ -f ~/.ssh/id_rsa ]] || ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ""'
 ExecStart=/usr/bin/ssh-agent -a $SSH_AUTH_SOCK
-ExecStartPost=/usr/bin/find ~/.ssh -type f -name 'id*' -not -name "*.pub" -exec ssh-add {} \;
+ExecStartPost=/usr/bin/bash -c 'find ~/.ssh -type f -name 'id*' -not -name "*.pub" -exec ssh-add {} \;'
 RemainAfterExit=yes
 
 [Install]
