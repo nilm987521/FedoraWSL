@@ -1,6 +1,6 @@
 ARG PLATFORM="linux/amd64"
 FROM --platform=$PLATFORM fedora:40
-RUN dnf install -y dnf-plugins-core && dnf copr enable -y wslutilities/wslu && sed -i '9d' /etc/dnf/dnf.conf && tee -a /etc/yum.repos.d/google-cloud-sdk.repo <<EOF
+RUN dnf install -y dnf-plugins-core && dnf copr enable -y wslutilities/wslu && dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo && sed -i '9d' /etc/dnf/dnf.conf && tee -a /etc/yum.repos.d/google-cloud-sdk.repo <<EOF
 [google-cloud-cli]
 name=Google Cloud CLI
 baseurl=https://packages.cloud.google.com/yum/repos/cloud-sdk-el9-x86_64
@@ -9,13 +9,11 @@ gpgcheck=1
 repo_gpgcheck=0
 gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
-
-RUN dnf install -y bat xclip cmake direnv eza gcc git google-cloud-sdk iproute iputils langpacks-zh_TW langpacks-en make man man-db neovim podman podman-docker sudo systemd tealdeer tmux trash-cli unzip wget wslu xdg-utils zoxide zsh zip gpg btop subscription-manager-plugin-container net-tools python310 nmap-ncat && \
+RUN dnf install -y wqy-zenhei-fonts fcitx5 fcitx5-chewing bat xclip cmake direnv eza gcc git google-cloud-sdk iproute iputils langpacks-zh_TW langpacks-en make man man-db neovim sudo systemd tealdeer tmux trash-cli unzip wget wslu xdg-utils zoxide zsh zip gpg btop subscription-manager-plugin-container net-tools nmap-ncat docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin && \
     dnf remove -y qemu-user-static && \
     dnf clean all -y
-RUN python3 -m ensurepip --default-pip && python3 -m pip install podman-compose
-# 設定podman
-RUN setcap cap_setuid+ep /usr/bin/newuidmap && setcap cap_setgid+ep /usr/bin/newgidmap && systemctl unmask systemd-logind
+RUN systemctl enable docker docker.socket
+RUN python3 -m ensurepip --upgrade && pip3 install chromaterm
 # 設定 wsl.conf
 ARG USER="wsl"
 RUN tee -a /etc/wsl.conf <<EOF
@@ -30,16 +28,22 @@ default = $USER
 [interop]
 appendWindowsPath = false
 EOF
+# 自動連接X11 Socket
+ADD wslg-x11-symlink.service /etc/systemd/system/wslg-x11-symlink.service
+RUN systemctl enable wslg-x11-symlink.service
 # 設定 sudo 不用密碼
 RUN echo "%wheel        ALL=(ALL)       NOPASSWD: ALL" | tee -a /etc/sudoers
 # 新增使用者
-RUN useradd -m -s /usr/bin/zsh -G wheel $USER
+RUN useradd -m -s /usr/bin/zsh -G wheel,docker $USER
 # WSL似乎不會載入/etc/environment
 RUN echo "# Everything not work in HERE!!" | tee -a /etc/environment
 # 設定profile
 RUN tee -a /etc/profile <<EOF
 export LANG=en_US.UTF-8
 export TZ=Asia/Taipei
+export GTK_IM_MODULE=fcitx5
+export QT_IM_MODULE=fcitx5
+export XMODIFIERS=@im=fcitx5
 EOF
 # 設定alias
 RUN tee -a /etc/profile.d/00-aliases.sh <<EOF
@@ -50,8 +54,7 @@ alias powershell='/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
 alias winStart='powershell -c start'
 alias ip='ip -c=always'
 alias eza='eza --icons always --group-directories-first --time-style '\''+%Y-%m-%d %H:%M'\'' --smart-group'
-alias podman='sudo podman'
-alias docker='sudo docker'
+alias cat='bat --plain'
 EOF
 # 切換使用者
 USER $USER
@@ -69,13 +72,14 @@ RUN tee -a ~/.zshrc <<EOF
 export SDKMAN_DIR="\$HOME/.sdkman"
 [ -s "\$SDKMAN_DIR/bin/sdkman-init.sh" ] && source "\$SDKMAN_DIR/bin/sdkman-init.sh"
 EOF
+ADD sdkconfig /home/$USER/.sdkman/etc/config
 
 # 設定TMUX
 COPY --chown=$USER:$USER tmux.conf /home/$USER/.config/tmux/tmux.conf
 RUN git clone https://github.com/nordtheme/tmux.git ~/.tmux/themes/nord-tmux && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 RUN ~/.tmux/plugins/tpm/scripts/install_plugins.sh
 
-# 安裝atuin
+# 安裝atuin, 目前只有beta版 不會有刷屏
 RUN mkdir -p /home/$USER/.local/bin
 RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/atuinsh/atuin/releases/download/v18.4.0-beta.1/atuin-installer.sh | sh && echo 'eval "$(atuin init zsh)"' | tee -a /home/$USER/.zshrc
 
@@ -141,3 +145,7 @@ RUN echo 'export PATH=$HOME/.local/bin:$PATH' | tee -a /home/$USER/.zshrc
 
 # 設定git
 RUN git config --global core.editor nvim && git config --global init.defaultBranch main
+
+RUN sed -i '1i [ -z \"$TMUX\" ] && [ -z \"$TERM_PROGRAM\" ] && ct tmux new-session -A -s HOME' /home/$USER/.zshrc
+
+ADD --chown=$USER:$USER eclipse-202203-tr_linux.tgz /opt

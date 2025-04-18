@@ -1,0 +1,12 @@
+[Unit]
+Description=Create symlink for WSLg X11 socket
+After=default.target
+Requires=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/ln -sf /mnt/wslg/.X11-unix/X0 /tmp/.X11-unix/X0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 gcloud compute instances list |
-  grep RUNNING |
+  grep RUNNING | sort |
   awk '{
       printf("%s %d \"new-window -n %s gcloud compute ssh --tunnel-through-iap %s\" ",
              $1,    # instance name

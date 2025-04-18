@@ -10,7 +10,7 @@
 - tleadeer
 - bat
 - btop
-- podman
+- docker
 - direnv
 - [nvm](https://github.com/nvm-sh/nvm)
 - [sdkman](https://sdkman.io/)
@@ -19,15 +19,15 @@
 - atuin
 
 ## 安裝
-1. 使用Podman建立Image及Container
+1. 使用docker建立Image及Container
   ```bash
-  podman build -t aitc-wsl --format docker --squash-all .
-  podman create --name aitc-wsl aitc-wsl
+  docker build -t aitc-wsl .
+  docker create --name aitc-wsl aitc-wsl
   ```
 
 2. 將container匯出成tar檔
   ```bash
-  podman export -o AitcWSL.tar aitc-wsl
+  docker export -o AitcWSL.tar aitc-wsl
   ```
 
 3. 匯入到WSL
@@ -37,7 +37,7 @@
 複製`.wslconfig`到windows使用者家目錄下
 
 ## 使用紅帽的開發者訂閱
-如果FedoraWSL有執行紅帽的訂閱,創見podman容器時,也會啟動訂閱
+如果FedoraWSL有執行紅帽的訂閱,創見docker容器時,也會啟動訂閱
 ```shell
 sudo subscription-manager register
 ```
